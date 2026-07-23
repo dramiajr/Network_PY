@@ -30,9 +30,14 @@ def get_target_ip():
         valid_ip = validate_ip(ip_address)
     return ip_address
 
-# Ping Command, Attempt, & Parsing Logic
+# Ping Command, Attempt, & Storing Logic
 def ping_target_ip(ip_address):
+
+    # Use for Linux 
     ping_command = ["ping", "-4", "-c", "4", ip_address]
+    
+    # Use for Windows
+    #ping_command = ["ping", "-4", "-n", "4", ip_address]
     ping_attempt = subprocess.run(
         ping_command,
         capture_output=True,
@@ -46,14 +51,24 @@ def ping_target_ip(ip_address):
         ping_status = "no reply"
     else:
         ping_status ="successful"
-    return ping_status, ping_output
+        
+
+    stored_ping_result = {
+        "ping_status": ping_status,
+        "ping_output_raw": ping_output 
+    }
+    return stored_ping_result
+
 
 
 def main():
     target_ip = get_target_ip()
-    ping_sequence = ping_target_ip(target_ip)
-    print(ping_sequence)
+
+    stored_ping_result = ping_target_ip(target_ip)
+
+    print("\nICMP Checks")
+    print("Status:", stored_ping_result["ping_status"])
+    print(stored_ping_result["ping_output_raw"])
 
 if __name__ == "__main__":
     main()
-
