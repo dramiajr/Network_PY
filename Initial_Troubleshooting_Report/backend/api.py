@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from initial_sw_troubleshooting import validate_ip, ping_target_ip
-
+# to run locally: "fastapi dev api.py"     
 
 app = FastAPI()
 
