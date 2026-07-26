@@ -1,6 +1,13 @@
 from fastapi import FastAPI
 from initial_sw_troubleshooting import validate_ip, ping_target_ip
-# to run locally: "fastapi dev api.py"     
+
+"""
+cd /path/to/backend
+source .venv/bin/activate
+fastapi dev api.py
+
+deactivate 
+"""     
 
 app = FastAPI()
 
@@ -15,7 +22,12 @@ def health_check():
 def run_ping(ip_address: str):
     valid_ip = validate_ip(ip_address)
     if valid_ip == False:
-        return valid_ip
+        invalid_ip = {
+            "request_status": "invalid",
+            "message": "Invalid IP Address",
+            "invalid_address": ip_address
+        }
+        return invalid_ip
     else:
         ping_attempt = ping_target_ip(ip_address)
         return ping_attempt
