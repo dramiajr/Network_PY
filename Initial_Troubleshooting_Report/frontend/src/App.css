@@ -5,12 +5,26 @@
   gap: 25px;
   place-content: center;
   place-items: center;
-  flex-grow: 1;
 
   @media (max-width: 1024px) {
     padding: 32px 20px 24px;
     gap: 18px;
   }
+}
+
+.target-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.report-section pre {
+  width: fit-content;
+  max-width: 100%;
+  margin: 1.5rem auto 0;
+  text-align: left;
+  overflow-x: auto;
 }
 
 .report-section {

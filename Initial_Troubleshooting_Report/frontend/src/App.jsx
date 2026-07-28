@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import './App.css'
+import TargetIpForm from './components/TargetIpForm'
+import PingReport from './components/PingReport'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 function App() {
 
@@ -31,7 +34,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/ping?ip_address=${encodeURIComponent(trimmedTargetIP)}`,
+        `${API_BASE_URL}/ping?ip_address=${encodeURIComponent(trimmedTargetIP)}`,
         { signal: controller.signal }
       )
 
@@ -65,60 +68,26 @@ function App() {
         <div>
           <h1>Initial Troubleshooting Report</h1>
           <p>
-            Run report for intial Switch troubleshooting summary. Work the findings from there.
+            Run report for initial Switch troubleshooting summary. Work the findings from there.
           </p>
           <hr />
         </div>
       </section>
       <section className="center">
         <main>
-          <form onSubmit={handleSubmit} aria-busy={isLoading}>
-            <label htmlFor="target-ip">Enter Target IP </label>
-            <input
-              id="target-ip"
-              type="text"
-              value={targetIP}
-              onChange={(event) => setTargetIP(event.target.value)}
-            />
-            <button
-              type="submit"
-              className="submit"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Running…' : 'Run Checks'}
-            </button>
-          </form>
+          <TargetIpForm
+            targetIP={targetIP}
+            setTargetIP={setTargetIP}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
           <div className="report-section">
             <h2>Report</h2>
             <hr />
-            <output aria-live="polite">
-              {requestError && (
-                <p className="request-error" role="alert">
-                  {requestError}
-                </p>
-              )}
-              {pingResult && (
-                pingResult.request_status === 'invalid' ? (
-                  <div>
-                    <p>
-                      {pingResult.message}
-                    </p>
-                    <p>
-                      {pingResult.invalid_address}
-                    </p>
-                  </div>
-                ) : (
-                <div>
-                  <p>
-                    Ping Status: {pingResult.ping_status}
-                  </p>
-                  <pre>
-                    {pingResult.ping_output_raw}
-                  </pre>
-                </div>
-                )
-              )}
-            </output>
+            <PingReport
+              pingResult={pingResult}
+              requestError={requestError}
+            />
           </div>
         </main>
       </section>
