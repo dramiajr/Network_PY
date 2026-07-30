@@ -44,6 +44,9 @@ def run_ping(ip_address: str):
         ping_attempt = ping_target_ip(ip_address)
         return ping_attempt
 
+@app.get("/switch-side")
+def run_switchside_logic():
 
+    return
 
     

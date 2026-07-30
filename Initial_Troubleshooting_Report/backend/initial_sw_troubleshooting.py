@@ -130,7 +130,12 @@ def netmiko_device_information(ip_address, username, password):
 
     return device_info
 
+def netmiko_operations(ip_address, interface, username, password):
+    stored_device_information = netmiko_device_information(ip_address, username, password)
 
+    net_connect = ConnectHandler(**stored_device_information)
+    show_interfaces_target = net_connect.send_command(f"show interfaces {interface}")
+    net_connect.disconnect()
 
 def main():
     target_ip = get_target_ip()
@@ -148,8 +153,6 @@ def main():
     print("\nICMP Checks")
     print("Status:", stored_ping_result["ping_status"])
     print(stored_ping_result["ping_output_raw"])
-
-
 #"""
 
 
