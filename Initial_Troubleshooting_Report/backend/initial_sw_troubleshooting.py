@@ -137,6 +137,11 @@ def netmiko_operations(ip_address, interface, username, password):
     show_interfaces_target = net_connect.send_command(f"show interfaces {interface}")
     net_connect.disconnect()
 
+    stored_switch_output = {
+        "show_interfaces_output_raw" : show_interfaces_target
+    }
+    return stored_switch_output
+
 def main():
     target_ip = get_target_ip()
     target_interface = get_interface()
