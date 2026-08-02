@@ -1,5 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from initial_sw_troubleshooting import validate_ip, ping_target_ip, validate_interface_type, validate_interface_number, netmiko_operations
 
@@ -10,6 +11,7 @@ fastapi dev api.py
 
 deactivate 
 """     
+app = FastAPI()
 
 class Frontend_Request_Fields(BaseModel):
     ip_address: str
@@ -17,8 +19,6 @@ class Frontend_Request_Fields(BaseModel):
     interface_number: str
     username: str
     password: str
-
-app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,7 +48,7 @@ def run_ping(ip_address: str):
             "message": "Invalid IP Address",
             "invalid_address": ip_address
         }
-        return invalid_ip
+        return JSONResponse(status_code=400, content=invalid_ip)
     
     ping_attempt = ping_target_ip(ip_address)
     return ping_attempt
@@ -64,7 +64,7 @@ def run_switchside_logic(request: Frontend_Request_Fields):
             "message": "Invalid IP Address",
             "invalid_address": request.ip_address
         }
-        return invalid_ip
+        return JSONResponse(status_code=400, content=invalid_ip)
     
     valid_int_type = validate_interface_type(request.interface_type)
     valid_int_number = validate_interface_number(request.interface_number)
@@ -73,7 +73,7 @@ def run_switchside_logic(request: Frontend_Request_Fields):
         invalid_interface = {
             "invalid_interface" : f"{request.interface_type}{request.interface_number}"
         }
-        return invalid_interface
+        return JSONResponse(status_code=400, content=invalid_interface)
 
     interface = request.interface_type + request.interface_number
     switchside_results = netmiko_operations(request.ip_address, interface, request.username, request.password)
@@ -81,7 +81,22 @@ def run_switchside_logic(request: Frontend_Request_Fields):
     backend_response = {
         "switch_results" : switchside_results
     }
+
+    fallback_response = {
+        "none" : "none"
+    }
+
+    result_type = switchside_results.get("result_type")
+
+    if result_type == "success":
+        return JSONResponse(status_code=200, content=backend_response)
+    elif result_type == "authentication_failure":
+        return JSONResponse(status_code=502, content=backend_response)
+    elif result_type == "connection_timeout":
+        return JSONResponse(status_code=504, content=backend_response)
+    else:
+        return JSONResponse(status_code=500, content=fallback_response)
+
     
-    return backend_response
 
     

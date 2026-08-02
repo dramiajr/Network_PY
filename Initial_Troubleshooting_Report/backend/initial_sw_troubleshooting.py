@@ -1,6 +1,7 @@
 import subprocess
 import getpass
 from netmiko import ConnectHandler 
+from netmiko.exceptions import NetmikoAuthenticationException, NetmikoTimeoutException
 
 # IP Validation Logic 
 def validate_ip(ip_address):
@@ -133,13 +134,38 @@ def netmiko_device_information(ip_address, username, password):
 def netmiko_operations(ip_address, interface, username, password):
     stored_device_information = netmiko_device_information(ip_address, username, password)
 
-    net_connect = ConnectHandler(**stored_device_information)
-    show_interfaces_target = net_connect.send_command(f"show interfaces {interface}")
-    net_connect.disconnect()
+    net_connect = None
 
-    stored_switch_output = {
-        "show_interfaces_output_raw" : show_interfaces_target
-    }
+    try:
+        net_connect = ConnectHandler(**stored_device_information)
+        show_interfaces_target = net_connect.send_command(f"show interfaces {interface}")
+        stored_switch_output = {
+            "result_type" : "success",
+            "show_interfaces_output_raw" : show_interfaces_target
+        }
+
+    except NetmikoAuthenticationException:
+        authentication_failure = {
+            "result_type" : "authentication_failure",
+            "attempt_status" : "failed",
+            "message" : "Authenication to device failed",
+            "device" : f"{ip_address}:22"
+        }
+        return authentication_failure
+    
+    except NetmikoTimeoutException:
+        connection_timeout = {
+            "result_type" : "connection_timeout",
+            "attempt_status" : "timed out",
+            "message" : "Connection attempt timed out",
+            "device" : f"{ip_address}:22"
+        }
+        return connection_timeout
+
+    finally:
+        if net_connect is not None:
+            net_connect.disconnect()
+
     return stored_switch_output
 
 def main():
