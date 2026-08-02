@@ -71,6 +71,8 @@ def run_switchside_logic(request: Frontend_Request_Fields):
 
     if valid_int_type == False or valid_int_number == False:
         invalid_interface = {
+            "request_status": "invalid",
+            "message" : "Invalid Interface",
             "invalid_interface" : f"{request.interface_type}{request.interface_number}"
         }
         return JSONResponse(status_code=400, content=invalid_interface)
@@ -83,7 +85,9 @@ def run_switchside_logic(request: Frontend_Request_Fields):
     }
 
     fallback_response = {
-        "none" : "none"
+        "request_status": "failed",
+        "failure_type": "unexpected_backend_result",
+        "message": "An unexpected switch-side processing error occurred"
     }
 
     result_type = switchside_results.get("result_type")
