@@ -80,25 +80,44 @@ def run_switchside_logic(request: Frontend_Request_Fields):
     interface = request.interface_type + request.interface_number
     switchside_results = netmiko_operations(request.ip_address, interface, request.username, request.password)
 
-    backend_response = {
-        "switch_results" : switchside_results
-    }
-
-    fallback_response = {
-        "request_status": "failed",
-        "failure_type": "unexpected_backend_result",
-        "message": "An unexpected switch-side processing error occurred"
-    }
-
     result_type = switchside_results.get("result_type")
 
     if result_type == "success":
+        backend_response = {
+            "request_status": switchside_results["attempt_status"],
+            "result_type" : switchside_results["result_type"],
+            "message" : switchside_results["message"],
+            "device" : switchside_results["device"],
+            "switch_results" : switchside_results
+        }   
         return JSONResponse(status_code=200, content=backend_response)
+    
     elif result_type == "authentication_failure":
+        backend_response = {
+            "request_status": switchside_results["attempt_status"],
+            "result_type" : switchside_results["result_type"],
+            "message" : switchside_results["message"],
+            "device" : switchside_results["device"],
+            "switch_results" : switchside_results
+        }
         return JSONResponse(status_code=502, content=backend_response)
+    
     elif result_type == "connection_timeout":
+        backend_response = {
+            "request_status": switchside_results["attempt_status"],
+            "result_type" : switchside_results["result_type"],
+            "message" : switchside_results["message"],
+            "device" : switchside_results["device"],
+            "switch_results" : switchside_results
+        }
         return JSONResponse(status_code=504, content=backend_response)
+    
     else:
+        fallback_response = {
+            "request_status": "failed",
+            "result_type": "unexpected_backend_result",
+            "message": "An unexpected switch-side processing error occurred"
+        }
         return JSONResponse(status_code=500, content=fallback_response)
 
     

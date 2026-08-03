@@ -141,6 +141,9 @@ def netmiko_operations(ip_address, interface, username, password):
         show_interfaces_target = net_connect.send_command(f"show interfaces {interface}")
         stored_switch_output = {
             "result_type" : "success",
+            "attempt_status" : "success",
+            "message" : "Switch-side checks successful",
+            "device" : f"{ip_address}:22",
             "show_interfaces_output_raw" : show_interfaces_target
         }
 
@@ -156,7 +159,7 @@ def netmiko_operations(ip_address, interface, username, password):
     except NetmikoTimeoutException:
         connection_timeout = {
             "result_type" : "connection_timeout",
-            "attempt_status" : "timed out",
+            "attempt_status" : "failed",
             "message" : "Connection attempt timed out",
             "device" : f"{ip_address}:22"
         }

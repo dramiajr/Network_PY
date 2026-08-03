@@ -1,9 +1,9 @@
-function PingReport ({ pingResult, requestError }) {
+function PingReport ({ pingResult, pingRequestError }) {
     return (
         <output aria-live="polite">
-              {requestError && (
-                <p className="request-error" role="alert">
-                  {requestError}
+              {pingRequestError && (
+                <p className="ping-request-error" role="alert">
+                  {pingRequestError}
                 </p>
               )}
               {pingResult && (

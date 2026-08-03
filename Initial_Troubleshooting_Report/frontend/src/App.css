@@ -1,34 +1,163 @@
-
 .center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
+  width: 100%;
+}
 
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+.center:first-of-type {
+  padding: 3.5rem 2rem 1.75rem;
+  text-align: center;
+}
+
+.center:first-of-type > div {
+  width: min(100%, 58rem);
+  margin-inline: auto;
+}
+
+.center:first-of-type p {
+  max-width: 44rem;
+  margin-inline: auto;
+  color: var(--text-muted);
+}
+
+.center:first-of-type hr {
+  width: 4rem;
+  margin: 1.5rem auto 0;
+  border-color: var(--accent);
+}
+
+.center:last-of-type {
+  padding: 0 2rem 3rem;
+}
+
+main {
+  width: min(100%, 70rem);
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .target-form {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) minmax(15rem, 1.4fr) minmax(10rem, 1fr) minmax(10rem, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+  padding: 1.5rem;
 }
 
-.report-section pre {
-  width: fit-content;
-  max-width: 100%;
-  margin: 1.5rem auto 0;
+.target-form > div {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+/* Keep the interface type and number together while its label spans both. */
+.target-form > div:nth-child(2) {
+  grid-template-columns: minmax(8.5rem, 1.4fr) minmax(5rem, 0.8fr);
+}
+
+.target-form > div:nth-child(2) label {
+  grid-column: 1 / -1;
+}
+
+.target-form label {
+  color: var(--text-h);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.045em;
+  line-height: 1.2;
   text-align: left;
-  overflow-x: auto;
+  text-transform: uppercase;
 }
 
-.report-section {
-  margin-top: 2rem;
+.target-form input,
+.target-form select,
+.submit {
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.target-form input,
+.target-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  color: var(--text-h);
+  background: var(--control-bg);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.target-form input:hover,
+.target-form select:hover {
+  border-color: var(--control-border-hover);
+}
+
+.target-form input:focus-visible,
+.target-form select:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  background: var(--surface);
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 4rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  border-radius: 5px;
+  color: var(--accent);
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  background: var(--accent-bg);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.submit {
+  padding: 0.65rem 1rem;
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--accent);
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 16px var(--accent-shadow);
+  transform: translateY(-1px);
+}
+
+.submit:focus-visible {
+  outline: 3px solid var(--accent-bg-strong);
+  outline-offset: 2px;
 }
 
 .submit:disabled {
@@ -36,6 +165,83 @@
   opacity: 0.6;
 }
 
-.request-error {
-  color: #c62828;
+.report-section {
+  min-height: 18rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-subtle);
+  text-align: left;
+}
+
+.report-section h2 {
+  margin: 0;
+}
+
+.report-section hr {
+  margin: 0.75rem 0 1.25rem;
+}
+
+.report-section output {
+  display: block;
+}
+
+.report-section output p + p {
+  margin-top: 0.5rem;
+}
+
+.report-section pre {
+  max-width: 100%;
+  margin: 1rem 0 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-h);
+  background: var(--code-bg);
+  font: 0.82rem/1.55 var(--mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ping-request-error {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+  color: var(--error-text);
+  background: var(--error-bg);
+}
+
+@media (max-width: 1100px) {
+  .target-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .submit {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .center:first-of-type {
+    padding: 2.5rem 1rem 1.5rem;
+  }
+
+  .center:last-of-type {
+    padding: 0 1rem 2rem;
+  }
+
+  .target-form {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .submit {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .report-section {
+    min-height: 14rem;
+    padding: 1rem;
+  }
 }

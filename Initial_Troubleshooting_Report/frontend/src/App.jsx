@@ -2,14 +2,21 @@ import { useState } from 'react'
 import './App.css'
 import TargetIpForm from './components/TargetIpForm'
 import PingReport from './components/PingReport'
+import SwitchSideReport from './components/SwitchSideReport'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 function App() {
 
   const [targetIP, setTargetIP] = useState('')
+  const [interfaceType, setInterfaceType] = useState("Gi")
+  const [interfaceNumber, setInterfaceNumber] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [pingResult, setPingResult] = useState(null)
+  const [switchResult, setSwitchResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [requestError, setRequestError] = useState('')
+  const [pingError, setPingError] = useState('')
+  const [switchError, setSwitchError] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -19,41 +26,72 @@ function App() {
     }
 
     setPingResult(null)
-    setRequestError('')
+    setSwitchResult(null)
+    setPingError('')
+    setSwitchError('')
 
     const trimmedTargetIP = targetIP.trim()
 
     if (!trimmedTargetIP) {
-      setRequestError('Enter a target IP address before running the check.')
+      setPingError('Enter a target IP address before running the check.')
       return
     }
 
     setIsLoading(true)
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 15000)
+
+    const requestBody = {
+      ip_address: trimmedTargetIP,
+      interface_type: interfaceType,
+      interface_number: interfaceNumber,
+      username: username,
+      password: password
+    }
 
     try {
-      const response = await fetch(
+
+      const pingResponse = await fetch(
         `${API_BASE_URL}/ping?ip_address=${encodeURIComponent(trimmedTargetIP)}`,
         { signal: controller.signal }
       )
 
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`)
+      const switchResponse = await fetch(
+        `${API_BASE_URL}/switch-side`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal
+          }
+      )
+
+      const pingData = await pingResponse.json()
+      if (!pingResponse.ok) {
+        setPingError(pingData.message)
+      } else {
+        setPingResult(pingData)
       }
 
-      const data = await response.json()
-      setPingResult(data)
+      const switchSideData = await switchResponse.json()
+      if (!switchResponse.ok) {
+        setSwitchError(switchSideData.message)
+        return
+      }
+
+      setSwitchResult(switchSideData)
     } catch (error) {
-      console.error('Ping request failed:', error)
+      console.error('Switch-side request failed:', error)
 
       if (error.name === 'AbortError') {
-        setRequestError(
-          'The ping request timed out after five seconds. Make sure the FastAPI server is running and responding, then try again.'
+        setSwitchError(
+          'The switch-side request took too long and was cancelled.'
         )
       } else {
-        setRequestError(
-          'Unable to run the ping check. Make sure the FastAPI server is running and try again.'
+        setSwitchError(
+          'Unable to reach the troubleshooting API. Make sure the FastAPI server is running and try again.'
         )
       }
     } finally {
@@ -78,6 +116,14 @@ function App() {
           <TargetIpForm
             targetIP={targetIP}
             setTargetIP={setTargetIP}
+            interfaceType={interfaceType}
+            setInterfaceType={setInterfaceType}
+            interfaceNumber={interfaceNumber}
+            setInterfaceNumber={setInterfaceNumber}
+            username={username}
+            setUsername={setUsername}
+            password={password}
+            setPassword={setPassword}
             handleSubmit={handleSubmit}
             isLoading={isLoading}
           />
@@ -86,7 +132,12 @@ function App() {
             <hr />
             <PingReport
               pingResult={pingResult}
-              requestError={requestError}
+              pingRequestError={pingError}
+            />
+            <hr />
+            <SwitchSideReport
+              switchResult={switchResult}
+              switchRequestError={switchError}
             />
           </div>
         </main>
