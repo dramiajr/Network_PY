@@ -37,11 +37,7 @@ function App() {
       return
     }
 
-    setIsLoading(true)
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000)
-
-    const requestBody = {
+    const apiRequestBody = {
       ip_address: trimmedTargetIP,
       interface_type: interfaceType,
       interface_number: interfaceNumber,
@@ -49,53 +45,90 @@ function App() {
       password: password
     }
 
+    setIsLoading(true)
+
     try {
 
-      const pingResponse = await fetch(
-        `${API_BASE_URL}/ping?ip_address=${encodeURIComponent(trimmedTargetIP)}`,
-        { signal: controller.signal }
-      )
+      const pingPromise = startPingWorkflow()
+      const switchSidePromise = startSwitchSideWorkflow()
 
-      const switchResponse = await fetch(
-        `${API_BASE_URL}/switch-side`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody),
-          signal: controller.signal
+      async function startPingWorkflow() {
+        const pingController = new AbortController()
+        const pingTimeoutId = setTimeout(() => pingController.abort(), 5000)
+
+        try {
+          const pingResponse = await fetch(
+            `${API_BASE_URL}/ping?ip_address=${encodeURIComponent(trimmedTargetIP)}`,
+            { signal: pingController.signal }
+          )
+          const pingData = await pingResponse.json()
+          if (!pingResponse.ok) {
+            setPingError(pingData.message)
+          } else {
+            setPingResult(pingData)
           }
-      )
+        } catch (error) {
+          console.error('Ping request failed:', error)
 
-      const pingData = await pingResponse.json()
-      if (!pingResponse.ok) {
-        setPingError(pingData.message)
-      } else {
-        setPingResult(pingData)
+          if (error.name === 'AbortError') {
+            setPingError(
+              'The ping request timed out after five seconds. Make sure the FastAPI server is running and responding, then try again.'
+            )
+          } else {
+            setPingError(
+              'Unable to run the ping check. Make sure the FastAPI server is running and try again.'
+              )
+            }
+        } finally {
+          clearTimeout(pingTimeoutId)
+        }
       }
 
-      const switchSideData = await switchResponse.json()
-      if (!switchResponse.ok) {
-        setSwitchError(switchSideData.message)
-        return
-      }
+      async function startSwitchSideWorkflow() {
+        const switchSideController = new AbortController()
+        const switchTimeoutId = setTimeout(() => switchSideController.abort(), 15000)
 
-      setSwitchResult(switchSideData)
-    } catch (error) {
-      console.error('Switch-side request failed:', error)
+        try {
+          const switchResponse = await fetch(
+            `${API_BASE_URL}/switch-side`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(apiRequestBody),
+              signal: switchSideController.signal
+            }
+          )
 
-      if (error.name === 'AbortError') {
-        setSwitchError(
-          'The switch-side request took too long and was cancelled.'
-        )
-      } else {
-        setSwitchError(
-          'Unable to reach the troubleshooting API. Make sure the FastAPI server is running and try again.'
-        )
+          const switchSideData = await switchResponse.json()
+          
+          if (!switchResponse.ok) {
+            setSwitchError(switchSideData.message)
+            return
+          }
+
+          setSwitchResult(switchSideData)
+        
+        } catch (error) {
+          console.error('Switch-side request failed:', error)
+          if (error.name === 'AbortError') {
+            setSwitchError(
+              'The switch-side request took too long and was cancelled.'
+            )
+          } else {
+            setSwitchError(
+              'Unable to reach the troubleshooting API. Make sure the FastAPI server is running and try again.'
+              )
+            }
+        } finally {
+          clearTimeout(switchTimeoutId)
+        }
       }
+      
+      await Promise.all([pingPromise, switchSidePromise])
+      
     } finally {
-      clearTimeout(timeoutId)
       setIsLoading(false)
     }
   }
