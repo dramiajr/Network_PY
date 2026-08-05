@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PasswordBox from './PasswordField'
 
 function TargetIpForm({targetIP, setTargetIP, interfaceType, setInterfaceType, interfaceNumber, setInterfaceNumber, username, setUsername, password, setPassword, handleSubmit, isLoading}) {
     const [showPassword, setShowPassword] = useState(false)
@@ -49,26 +50,12 @@ function TargetIpForm({targetIP, setTargetIP, interfaceType, setInterfaceType, i
             />
           </div>
 
-          <div>
-            <label htmlFor="password"> Password </label>
-            <div className="password-field">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                aria-pressed={showPassword}
-                onClick={() => setShowPassword((isVisible) => !isVisible)}
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
-            </div>
-          </div>
+
+          <PasswordBox
+          password={password}
+          setPassword={setPassword}
+          />
+
 
             <button
               type="submit"
