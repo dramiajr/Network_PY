@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import TargetIpForm from './components/TargetIpForm'
+import TargetIpForm from './components/TargetDeviceForm'
 import PingReport from './components/PingReport'
 import SwitchSideReport from './components/SwitchSideReport'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -8,7 +8,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 function App() {
 
   const [targetIP, setTargetIP] = useState('')
-  const [interfaceType, setInterfaceType] = useState("Gi")
+  const [interfaceType, setInterfaceType] = useState('')
   const [interfaceNumber, setInterfaceNumber] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')

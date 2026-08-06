@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function PasswordBox({password, setPassword}){
+function PasswordBox({password, setPassword}) {
     const [showPassword, setShowPassword] = useState(false)
     return (
         <div>
