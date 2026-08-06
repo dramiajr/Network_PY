@@ -33,17 +33,19 @@ main {
   margin-inline: auto;
   overflow: hidden;
   border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
   border-radius: 14px;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: 0 22px 55px rgba(28, 39, 64, 0.11);
 }
 
 .target-form {
   display: grid;
-  grid-template-columns: minmax(10rem, 1fr) minmax(15rem, 1.4fr) minmax(10rem, 1fr) minmax(10rem, 1fr) auto;
+  grid-template-columns: minmax(10rem, 1fr) minmax(11rem, 1.1fr) minmax(8rem, 0.8fr) minmax(10rem, 1fr) minmax(10rem, 1fr) auto;
   gap: 1rem;
   align-items: end;
   padding: 1.5rem;
+  background: linear-gradient(135deg, var(--surface) 55%, var(--accent-bg));
 }
 
 .target-form > div {
@@ -51,15 +53,6 @@ main {
   grid-template-columns: 1fr;
   gap: 0.45rem;
   min-width: 0;
-}
-
-/* Keep the interface type and number together while its label spans both. */
-.target-form > div:nth-child(2) {
-  grid-template-columns: minmax(8.5rem, 1.4fr) minmax(5rem, 0.8fr);
-}
-
-.target-form > div:nth-child(2) label {
-  grid-column: 1 / -1;
 }
 
 .target-form label {
@@ -96,6 +89,7 @@ main {
 .target-form input:hover,
 .target-form select:hover {
   border-color: var(--control-border-hover);
+  background: var(--surface);
 }
 
 .target-form input:focus-visible,
@@ -165,6 +159,44 @@ main {
   opacity: 0.6;
 }
 
+.target-form > div:last-child {
+  grid-template-columns: repeat(2, max-content);
+}
+
+.target-form > div:last-child .submit {
+  grid-column: auto;
+}
+
+.cancel {
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--error-border);
+  border-radius: 8px;
+  color: var(--error-text);
+  background: var(--error-bg);
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+.cancel:hover {
+  filter: brightness(0.98);
+  box-shadow: 0 6px 16px rgba(180, 35, 24, 0.16);
+  transform: translateY(-1px);
+}
+
+.cancel:active {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+.cancel:focus-visible {
+  outline: 3px solid var(--error-border);
+  outline-offset: 2px;
+}
+
 .report-section {
   min-height: 18rem;
   padding: 1.5rem;
@@ -175,10 +207,17 @@ main {
 
 .report-section h2 {
   margin: 0;
+  color: var(--accent);
+  font-size: 1.3rem;
 }
 
 .report-section hr {
   margin: 0.75rem 0 1.25rem;
+}
+
+.report-section > hr:first-of-type {
+  width: 3rem;
+  border-color: var(--accent);
 }
 
 .report-section output {
@@ -203,7 +242,8 @@ main {
   word-break: break-word;
 }
 
-.ping-request-error {
+.ping-request-error,
+.switch-request-error {
   padding: 0.75rem 1rem;
   border: 1px solid var(--error-border);
   border-radius: 8px;
@@ -218,6 +258,11 @@ main {
 
   .submit {
     grid-column: 1 / -1;
+  }
+
+  .target-form > div:last-child {
+    grid-column: 1 / -1;
+    justify-content: start;
   }
 }
 
@@ -237,6 +282,15 @@ main {
 
   .submit {
     grid-column: auto;
+    width: 100%;
+  }
+
+  .target-form > div:last-child {
+    grid-column: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cancel {
     width: 100%;
   }
 

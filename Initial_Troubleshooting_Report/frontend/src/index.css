@@ -66,6 +66,7 @@ body {
   margin: 0;
   background:
     radial-gradient(circle at 50% 0, var(--accent-bg), transparent 32rem),
+    radial-gradient(circle at 90% 85%, var(--accent-bg), transparent 28rem),
     var(--bg);
 }
 

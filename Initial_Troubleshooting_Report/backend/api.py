@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from initial_sw_troubleshooting import validate_ip, ping_target_ip, validate_interface_type, validate_interface_number, netmiko_operations
-
 """
 cd /path/to/backend
 source .venv/bin/activate
@@ -40,6 +39,7 @@ def health_check():
 
 @app.get("/ping")
 def run_ping(ip_address: str):
+
     valid_ip = validate_ip(ip_address)
 
     if valid_ip == False:

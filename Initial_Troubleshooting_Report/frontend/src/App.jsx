@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './App.css'
-import TargetIpForm from './components/TargetDeviceForm'
+import TargetDeviceForm from './components/TargetDeviceForm'
 import PingReport from './components/PingReport'
 import SwitchSideReport from './components/SwitchSideReport'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -13,12 +13,16 @@ function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [pingResult, setPingResult] = useState(null)
-  const [switchResult, setSwitchResult] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [pingError, setPingError] = useState('')
+  const [switchResult, setSwitchResult] = useState(null)
   const [switchError, setSwitchError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const pingControllerRef = useRef(null)
+  const switchControllerRef = useRef(null)
+  const manualCancelRef = useRef(false)
 
   async function handleSubmit(event) {
+
     event.preventDefault()
 
     if (isLoading) {
@@ -46,6 +50,7 @@ function App() {
     }
 
     setIsLoading(true)
+    manualCancelRef.current = false
 
     try {
 
@@ -53,8 +58,11 @@ function App() {
       const switchSidePromise = startSwitchSideWorkflow()
 
       async function startPingWorkflow() {
+        
         const pingController = new AbortController()
-        const pingTimeoutId = setTimeout(() => pingController.abort(), 5000)
+        pingControllerRef.current = pingController
+        const pingTimeoutId = setTimeout(() => 
+          pingController.abort(), 5000)
 
         try {
           const pingResponse = await fetch(
@@ -71,6 +79,10 @@ function App() {
           console.error('Ping request failed:', error)
 
           if (error.name === 'AbortError') {
+            if (manualCancelRef.current) {
+              return
+            }
+            
             setPingError(
               'The ping request timed out after five seconds. Make sure the FastAPI server is running and responding, then try again.'
             )
@@ -86,7 +98,9 @@ function App() {
 
       async function startSwitchSideWorkflow() {
         const switchSideController = new AbortController()
-        const switchTimeoutId = setTimeout(() => switchSideController.abort(), 15000)
+        switchControllerRef.current = switchSideController
+        const switchTimeoutId = setTimeout(() => 
+          switchSideController.abort(), 15000)
 
         try {
           const switchResponse = await fetch(
@@ -113,9 +127,13 @@ function App() {
         } catch (error) {
           console.error('Switch-side request failed:', error)
           if (error.name === 'AbortError') {
-            setSwitchError(
-              'The switch-side request took too long and was cancelled.'
-            )
+  
+            if (manualCancelRef.current) {
+              return}
+
+              setSwitchError(
+                'The switch-side request took too long and was cancelled.'
+              )
           } else {
             setSwitchError(
               'Unable to reach the troubleshooting API. Make sure the FastAPI server is running and try again.'
@@ -125,12 +143,19 @@ function App() {
           clearTimeout(switchTimeoutId)
         }
       }
-      
+    
       await Promise.all([pingPromise, switchSidePromise])
       
     } finally {
       setIsLoading(false)
     }
+  }
+  
+  function handleCancel() {
+    manualCancelRef.current = true
+
+    pingControllerRef.current?.abort()
+    switchControllerRef.current?.abort()
   }
 
   return (
@@ -146,7 +171,7 @@ function App() {
       </section>
       <section className="center">
         <main>
-          <TargetIpForm
+          <TargetDeviceForm
             targetIP={targetIP}
             setTargetIP={setTargetIP}
             interfaceType={interfaceType}
@@ -158,6 +183,7 @@ function App() {
             password={password}
             setPassword={setPassword}
             handleSubmit={handleSubmit}
+            handleCancel={handleCancel}
             isLoading={isLoading}
           />
           <div className="report-section">

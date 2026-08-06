@@ -1,7 +1,8 @@
 import InterfaceField from './InterfaceField'
 import PasswordBox from './PasswordField'
+import SubmitButton from './RunCheckButton'
 
-function TargetIpForm({targetIP, setTargetIP, interfaceType, setInterfaceType, interfaceNumber, setInterfaceNumber, username, setUsername, password, setPassword, handleSubmit, isLoading}) {
+function TargetDeviceForm({ targetIP, setTargetIP, interfaceType, setInterfaceType, interfaceNumber, setInterfaceNumber, username, setUsername, password, setPassword, handleSubmit, handleCancel, isLoading }) {
 
     return (
 
@@ -9,7 +10,7 @@ function TargetIpForm({targetIP, setTargetIP, interfaceType, setInterfaceType, i
 
           <div>
             <label htmlFor="target-ip">Enter Target IP </label>
-            <input
+            <input autoFocus
               id="target-ip"
               type="text"
               value={targetIP}
@@ -40,16 +41,13 @@ function TargetIpForm({targetIP, setTargetIP, interfaceType, setInterfaceType, i
           />
 
 
-          <button
-            type="submit"
-            className="submit"
-            disabled={isLoading}
-          >     
-            {isLoading ? 'Running…' : 'Run Checks'}
-          </button>
+          <SubmitButton
+          isLoading={isLoading}
+          handleCancel={handleCancel}
+          />
 
         </form>
     )
 }
 
-export default TargetIpForm
+export default TargetDeviceForm
