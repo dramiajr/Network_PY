@@ -1,34 +1,38 @@
-# Network Python Projects
+# Network Engineering Tools and Builds
 
-This repository is a collection of practical Python projects focused on network operations, troubleshooting, automation, and tooling.
+This repository is a collection of practical projects focused on network operations, troubleshooting, automation, and software tooling.
 
-The primary goal is to strengthen my Python skills by building useful tools around real networking workflows rather than learning programming only through isolated exercises.
+The goal is to strengthen my programming and network engineering skills by building tools around real workflows rather than learning technologies only through isolated exercises.
+
+Projects may include Python automation, APIs, backend services, frontend interfaces, network device integrations, data parsing, and testing.
 
 ## Goals
 
 Through the projects in this repository, I aim to:
 
-- Build a strong Python foundation for network automation and NetDevOps
-- Automate repetitive evidence-gathering and troubleshooting tasks
-- Turn raw command output into structured, useful information
-- Improve my understanding of APIs, data models, parsing, testing, and application design
-- Develop tools that support engineers without hiding the underlying evidence
-- Create portfolio projects that demonstrate practical networking and automation skills
-- Progress toward working with technologies such as REST APIs, NETCONF, RESTCONF, YANG, FastAPI, and network automation platforms
+- Build practical tools for network troubleshooting and operations
+- Automate repetitive evidence-gathering workflows
+- Turn raw network output into structured, useful information
+- Improve my understanding of frontend and backend development
+- Learn API design, data modeling, parsing, testing, and application architecture
+- Explore technologies such as Python, FastAPI, React, Netmiko, REST APIs, NETCONF, RESTCONF, and YANG
+- Create portfolio projects that demonstrate networking, automation, and software-development skills
+- Build tools that support engineers without hiding the underlying evidence
 
 ## Development Approach
 
-Projects will be built incrementally, with an emphasis on understanding the Python logic rather than generating complete solutions without explanation.
+Projects are built incrementally, with an emphasis on understanding how each part works.
 
 The general approach is:
 
 - Build one working behavior at a time
-- Keep the code understandable and testable
-- Use realistic networking examples
+- Use realistic networking scenarios and lab environments
+- Keep frontend, backend, and network responsibilities understandable
+- Preserve raw evidence alongside structured results
 - Separate observed evidence from diagnosis
-- Preserve raw output alongside structured results
-- Refactor only after the first working version is understood
-- Document progress and lessons learned as each project develops
+- Test success, failure, timeout, and partial-result behavior
+- Refactor only after the working behavior is understood
+- Document progress, design decisions, and lessons learned
 
 ## Repository Structure
 
