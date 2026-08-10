@@ -91,7 +91,7 @@ def seed_switch_snapshot(ip_address, username, password):
 
     return initial_sw_snapshot   
 
-
+"""
 def main():
     x = "172.16.100.10"
     y = "ts_app"
@@ -102,43 +102,45 @@ def main():
     netmiko_cmd = ConnectHandler(**std_format)
     cdp_neighbors = netmiko_cmd.send_command("show cdp neighbors detail | include Device|IP|Interface|Duplex")
 
-    neighbors_detail_raw = cdp_neighbors.split("Device")
+    neighbors_detail_array = cdp_neighbors.split("Device")
 
-    for unique_block in neighbors_detail_raw:
-        if unique_block == "":
+    cdp_neighbors_list = []
+
+    for neighbors in neighbors_detail_array:
+
+        print("Starting outer loop")
+        
+        if neighbors == "":
             continue
-        else:
-            cdp_neighbor = unique_block
-            print(cdp_neighbor)
 
-"""
-    print(neighbors_detail_raw[1])
-    print("\n")
-    print(neighbors_detail_raw[2])
+        current_neighbor = {}
 
-    parsed = neighbors_detail_raw[1].split("\n")
-    print(parsed[0].strip())
-    print(parsed[1].strip())
-    parsed_int = parsed[2].split(",")
-    print(parsed_int[0])
-    print(parsed_int[1].strip())
-    print(parsed[3])
+        split_unique_neighbors = neighbors.strip().split("\n")
 
-    parsed2 = neighbors_detail_raw[2].split("\n")
-    print(parsed2[0].strip())
-    print(parsed2[1].strip())
-    parsed2_int = parsed2[2].split(",")
-    print(parsed2_int[0])
-    print(parsed2_int[1].strip())
-    print(parsed2[3])
+        for unique_neighbor in split_unique_neighbors:
+            print("starting inner loop")
+            if "ID:" in unique_neighbor:
+                extract_hostname = unique_neighbor.split(":")
+                current_neighbor["neighbor_hostname"] = extract_hostname[1].strip()
+            elif "IP address:" in unique_neighbor:
+                extract_ip_address = unique_neighbor.split(":")
+                current_neighbor["neighbor_ip_address"] = extract_ip_address[1].strip()
+            elif "Interface:" in unique_neighbor:
+                extract_interfaces = unique_neighbor.split(":")
+                extract_local_interfaces = extract_interfaces[1].split(",")
+                current_neighbor["local_interface"] = extract_local_interfaces[0].strip()
+                current_neighbor["outgoing_interface"] = extract_interfaces[2].strip()
+            elif "Duplex" in unique_neighbor:
+                extract_duplex = unique_neighbor.split(":")
+                current_neighbor["duplex"] = extract_duplex[1].strip()
 
-"""
-    
+        cdp_neighbors_list.append(current_neighbor)     
 
-    
-
-
+    print(cdp_neighbors_list)   
 
 
 if __name__ == "__main__":
     main()
+
+"""  
+           
