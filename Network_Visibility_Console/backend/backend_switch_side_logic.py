@@ -42,14 +42,20 @@ def seed_switch_snapshot(ip_address, username, password):
     run_netmiko = None
 
     try:
+
         run_netmiko = ConnectHandler(**standardized_netmiko_information)
 
-        get_seed_sw_hostname = run_netmiko.send_command("show version | inc uptime is")
+        get_seed_sw_hostname = run_netmiko.send_command("show version | include uptime is")
         seed_sw_hostname = get_seed_sw_hostname.split()[0]
 
         get_seed_sw_arp_table = run_netmiko.send_command("show ip arp")
 
         get_seed_sw_route_table = run_netmiko.send_command("show ip route | include ^[A-Za-z*+%].*[0-9]/[0-9]")
+
+        get_seed_sw_cdp_neighbors_detail = run_netmiko.send_command("show cdp neighbors detail | include Device|IP|Interface|Duplex")
+        seed_cdp_neighbors_detail_raw = get_seed_sw_cdp_neighbors_detail.strip().split("Device ID:")
+
+
 
         initial_sw_snapshot = {
             "result_type" : "success",
@@ -86,9 +92,53 @@ def seed_switch_snapshot(ip_address, username, password):
     return initial_sw_snapshot   
 
 
+def main():
+    x = "172.16.100.10"
+    y = "ts_app"
+    z = "troubleShooting!"
+
+    std_format = netmiko_device_information(x,y,z)
+
+    netmiko_cmd = ConnectHandler(**std_format)
+    cdp_neighbors = netmiko_cmd.send_command("show cdp neighbors detail | include Device|IP|Interface|Duplex")
+
+    neighbors_detail_raw = cdp_neighbors.split("Device")
+
+    for unique_block in neighbors_detail_raw:
+        if unique_block == "":
+            continue
+        else:
+            cdp_neighbor = unique_block
+            print(cdp_neighbor)
+
+"""
+    print(neighbors_detail_raw[1])
+    print("\n")
+    print(neighbors_detail_raw[2])
+
+    parsed = neighbors_detail_raw[1].split("\n")
+    print(parsed[0].strip())
+    print(parsed[1].strip())
+    parsed_int = parsed[2].split(",")
+    print(parsed_int[0])
+    print(parsed_int[1].strip())
+    print(parsed[3])
+
+    parsed2 = neighbors_detail_raw[2].split("\n")
+    print(parsed2[0].strip())
+    print(parsed2[1].strip())
+    parsed2_int = parsed2[2].split(",")
+    print(parsed2_int[0])
+    print(parsed2_int[1].strip())
+    print(parsed2[3])
+
+"""
+    
+
+    
 
 
 
 
-
-
+if __name__ == "__main__":
+    main()
