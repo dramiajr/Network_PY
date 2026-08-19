@@ -28,7 +28,7 @@ def check_api_health():
 
 @app.post("/switch_snapshots")
 def run_initial_switch_side_request(request: Frontend_Request_Fields):
-    # Pre Netmiko attempt validation
+    # Reject invalid input before opening an SSH connection.
     valid_ip = validate_ip(request.ip_address)
     if not valid_ip:
         invalid_ip_address = {
@@ -45,7 +45,7 @@ def run_initial_switch_side_request(request: Frontend_Request_Fields):
         }
         return JSONResponse(status_code=400, content=invalid_credentials)
 
-    # Initial Snapshot 
+    # Collect the initial snapshot from the seed switch.
     seed_switch_ssh_attempt = seed_switch_snapshot(request.ip_address, request.username, request.password)
 
     format_frontend_response = seed_switch_ssh_attempt.get("result_type")
@@ -55,7 +55,11 @@ def run_initial_switch_side_request(request: Frontend_Request_Fields):
             "request_status": seed_switch_ssh_attempt["attempt_status"],
             "result_type" : seed_switch_ssh_attempt["result_type"],
             "device" : seed_switch_ssh_attempt["device"],
-            "message" : seed_switch_ssh_attempt["message"]
+            "message" : seed_switch_ssh_attempt["message"],
+            "seed_sw_hostname": seed_switch_ssh_attempt["hostname"],
+            "seed_sw_arp_table": seed_switch_ssh_attempt["raw_arp_table"],
+            "seed_sw_filtered_route_table" : seed_switch_ssh_attempt["filtered_route_table"],
+            "seed_sw_cdp_neighbors_list" : seed_switch_ssh_attempt["cdp_neighbors"]
         }   
         return JSONResponse(status_code=200, content=initial_netmiko_snapshot)
     
@@ -85,7 +89,6 @@ def run_initial_switch_side_request(request: Frontend_Request_Fields):
         }
         return JSONResponse(status_code=500, content=fallback_response)
     
-
 
 
 
