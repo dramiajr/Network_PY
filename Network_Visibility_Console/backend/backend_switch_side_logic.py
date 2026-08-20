@@ -1,10 +1,14 @@
+from dotenv import load_dotenv
+import os
 from netmiko import ConnectHandler 
 from netmiko.exceptions import NetmikoAuthenticationException, NetmikoTimeoutException
 
+load_dotenv()
+
 def validate_ip(ip_address):
-    split_ip = ip_address.split(".")
-    if len(split_ip) == 4:
-        for octet in split_ip:
+    octet_strings = ip_address.split(".")
+    if len(octet_strings) == 4:
+        for octet in octet_strings:
             if octet == "":
                 return False
             elif len(octet) > 3:
@@ -14,8 +18,8 @@ def validate_ip(ip_address):
             elif len(octet) > 1 and octet[0] == "0":
                 return False
             else:
-                converted_octet = int(octet)
-                if not 0 <= converted_octet <= 255:
+                octet_value = int(octet)
+                if not 0 <= octet_value <= 255:
                     return False
         return True
     else:
@@ -28,142 +32,147 @@ def validate_passed_credentials(username, password):
         return False
 
 def netmiko_device_information(ip_address, username, password):
-    netmiko_device_info = {
+    netmiko_params = {
         "device_type" : "cisco_ios",
         "host" : ip_address,
         "username" : username,
         "password": password
     }
-    return netmiko_device_info
+    return netmiko_params
 
 def seed_switch_snapshot(ip_address, username, password):
-    standardized_netmiko_information = netmiko_device_information(ip_address, username, password)
+    netmiko_params = netmiko_device_information(ip_address, username, password)
 
-    run_netmiko = None
+    connection = None
 
     try:
-        run_netmiko = ConnectHandler(**standardized_netmiko_information)
+        connection = ConnectHandler(**netmiko_params)
 
         # Collect the seed-switch data included in the initial API response.
-        get_seed_sw_hostname = run_netmiko.send_command("show version | include uptime is")
-        seed_sw_hostname = get_seed_sw_hostname.split()[0]
+        show_version_output = connection.send_command("show version | include uptime is")
+        hostname = show_version_output.split()[0]
 
-        get_seed_sw_arp_table = run_netmiko.send_command("show ip arp")
+        arp_table_output = connection.send_command("show ip arp")
 
-        get_seed_sw_route_table = run_netmiko.send_command("show ip route | include ^[A-Za-z*+%].*[0-9]/[0-9]")
+        route_table_output = connection.send_command("show ip route | include ^[A-Za-z*+%].*[0-9]/[0-9]")
 
-        initial_sw_snapshot = {
+        snapshot = {
             "result_type" : "success",
             "attempt_status" : "success",
             "device" : f"{ip_address}:22",
             "message" : "Seed Switch Snapshot",
-            "hostname" : seed_sw_hostname,
-            "raw_arp_table" : get_seed_sw_arp_table,
-            "filtered_route_table" : get_seed_sw_route_table
+            "hostname" : hostname,
+            "raw_arp_table" : arp_table_output,
+            "filtered_route_table" : route_table_output
         }
 
         # Filter CDP output on the device to reduce the data transferred and parsed.
-        get_seed_sw_cdp_neighbors_detail = run_netmiko.send_command("show cdp neighbors detail | include Device|IP|Interface|Duplex|Total")
+        cdp_output = connection.send_command("show cdp neighbors detail | include Device|IP|Interface|Duplex|Total")
 
-        seed_sw_cdp_neighbor_results = {}
+        cdp_summary = {}
 
-        seed_sw_cdp_neighbor_entries_raw = get_seed_sw_cdp_neighbors_detail.strip().split("\n")
+        cdp_lines = cdp_output.strip().split("\n")
 
         # Cisco IOS reports the neighbor count in a trailing "Total cdp entries" line.
-        for cdp_entries in seed_sw_cdp_neighbor_entries_raw:
-            if "Total cdp entries" in cdp_entries:
-                parse_cdp_entries = cdp_entries.strip().split(":")
-                cdp_entries_displayed = int(parse_cdp_entries[1])
-                seed_sw_cdp_neighbor_results["total_cdp_entries"] = cdp_entries_displayed
+        for line in cdp_lines:
+            if "Total cdp entries" in line:
+                neighbor_count_fields = line.strip().split(":")
+                neighbor_count = int(neighbor_count_fields[1])
+                cdp_summary["total_cdp_entries"] = neighbor_count
 
         # Each CDP record begins with "Device ID:", so "Device" separates records.
-        seed_sw_cdp_neighbors_detail_raw = get_seed_sw_cdp_neighbors_detail.strip().split("Device")
+        neighbor_blocks = cdp_output.strip().split("Device")
 
-        seed_sw_cdp_neighbors_list = []
+        neighbors = []
 
-        for unique_entry in seed_sw_cdp_neighbors_detail_raw:
-            if unique_entry == "":
+        for neighbor_block in neighbor_blocks:
+            if neighbor_block == "":
                 continue
 
-            store_unique_cdp_neighbors = {}
+            neighbor = {}
 
-            unique_entry_split = unique_entry.strip().split("\n")
+            neighbor_lines = neighbor_block.strip().split("\n")
 
             # Retain only the fields needed for topology discovery.
-            for cdp_neighbor in unique_entry_split:
-                if "ID:" in cdp_neighbor:
-                    extract_hostname = cdp_neighbor.split(":")
-                    store_unique_cdp_neighbors["cdp_neighbor_hostname"] = extract_hostname[1].strip()
+            for line in neighbor_lines:
+                if "ID:" in line:
+                    hostname_parts = line.split(":")
+                    neighbor["cdp_neighbor_hostname"] = hostname_parts[1].strip()
 
-                elif "IP address:" in cdp_neighbor:
-                    extract_ip_address = cdp_neighbor.split(":")
-                    store_unique_cdp_neighbors["cdp_neighbor_ip_address"] = extract_ip_address[1].strip()
+                elif "IP address:" in line:
+                    ip_address_parts = line.split(":")
+                    neighbor["cdp_neighbor_ip_address"] = ip_address_parts[1].strip()
 
-                elif "Interface:" in cdp_neighbor:
-                    extract_interfaces = cdp_neighbor.split(":")
-                    extract_local_interfaces = extract_interfaces[1].split(",")
-                    store_unique_cdp_neighbors["local_interface"] = extract_local_interfaces[0].strip()
-                    store_unique_cdp_neighbors["outgoing_interface"] = extract_interfaces[2].strip()
+                elif "Interface:" in line:
+                    interface_parts = line.split(":")
+                    local_interface_parts = interface_parts[1].split(",")
+                    neighbor["local_interface"] = local_interface_parts[0].strip()
+                    neighbor["outgoing_interface"] = interface_parts[2].strip()
 
-                elif "Duplex" in cdp_neighbor:
-                    extract_duplex = cdp_neighbor.split(":")
-                    store_unique_cdp_neighbors["duplex"] = extract_duplex[1].strip()
+                elif "Duplex" in line:
+                    duplex_parts = line.split(":")
+                    neighbor["duplex"] = duplex_parts[1].strip()
 
-            if cdp_neighbor:
-                seed_sw_cdp_neighbors_list.append(store_unique_cdp_neighbors)
+            if line:
+                neighbors.append(neighbor)
 
             # Collect interface and route evidence for each discovered neighbor.
-            for loop_through in seed_sw_cdp_neighbors_list:
-                cdp_neighbor_additional_command_results = {}
+            for discovered_neighbor in neighbors:
+                evidence = {}
 
-                if "local_interface" in loop_through:
-                    local_interface = loop_through["local_interface"].strip()
-                    check_local_interface = run_netmiko.send_command(f"show interfaces {local_interface}")
-                    cdp_neighbor_additional_command_results["local_interface_check"] = check_local_interface.strip()
+                if "local_interface" in discovered_neighbor:
+                    local_interface = discovered_neighbor["local_interface"].strip()
+                    interface_output = connection.send_command(f"show interfaces {local_interface}")
+                    evidence["local_int_output"] = interface_output.strip()
 
-                if "cdp_neighbor_ip_address" in loop_through:
-                    neighbor_ip = loop_through["cdp_neighbor_ip_address"]
-                    check_route_to_neighbor = run_netmiko.send_command(f"show ip route {neighbor_ip}")
-                    cdp_neighbor_additional_command_results["cdp_neighbor_route"] = check_route_to_neighbor.strip()
+                if "cdp_neighbor_ip_address" in discovered_neighbor:
+                    neighbor_ip_address = discovered_neighbor["cdp_neighbor_ip_address"]
+                    route_output = connection.send_command(f"show ip route {neighbor_ip_address}")
+                    evidence["cdp_neighbor_route"] = route_output.strip()
 
-            if loop_through:
-                store_unique_cdp_neighbors["evidence"] = cdp_neighbor_additional_command_results
+                    cef_output = connection.send_command(f"show ip cef {neighbor_ip_address}")
+                    evidence["cef"] = cef_output.strip()
 
-        seed_sw_cdp_neighbor_results["cdp_neighbors"] = seed_sw_cdp_neighbors_list
+            
 
-        initial_sw_snapshot["cdp_neighbors"] = seed_sw_cdp_neighbor_results
+            if discovered_neighbor:
+                neighbor["evidence"] = evidence
+
+        cdp_summary["cdp_neighbors"] = neighbors
+
+        snapshot["cdp_neighbors"] = cdp_summary
         
     except NetmikoAuthenticationException:
-        authentication_failure = {
+        authentication_failure_result = {
             "result_type" : "authentication_failure",
             "attempt_status" : "failed",
             "message" : "Authentication to device failed",
             "device" : f"{ip_address}:22"
         }
-        return authentication_failure
+        return authentication_failure_result
     
     except NetmikoTimeoutException:
-        connection_timeout = {
+        connection_timeout_result = {
             "result_type" : "connection_timeout",
             "attempt_status" : "failed",
             "message" : "Connection attempt timed out",
             "device" : f"{ip_address}:22"
         }
-        return connection_timeout
+        return connection_timeout_result
 
     finally:
-        if run_netmiko is not None:
-            run_netmiko.disconnect()
+        if connection is not None:
+            connection.disconnect()
 
-    return initial_sw_snapshot   
+    return snapshot   
 
 def main():
-    x = "172.16.100.10"
-    y = "ts_app"
-    z = "troubleShooting!"
+    x = os.getenv("LAB_SWITCH_IP")
+    y = os.getenv("LAB_SWITCH_USER")
+    z = os.getenv("LAB_SWITCH_PWD")
 
-    result = seed_switch_snapshot(x, y, z)
-    print(result)
+    #result = seed_switch_snapshot(x, y, z)
+    #print(result)
 
     std_format = netmiko_device_information(x,y,z)
 
@@ -230,7 +239,7 @@ def main():
         if loop:
             current_neighbor["evidence"] = cdp_neighbor_additional_command_results
 
-    print(f"{cdp_neighbors_list}")
+    #print(f"{cdp_neighbors_list}")
 
 
 if __name__ == "__main__":
